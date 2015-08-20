@@ -5,14 +5,15 @@ clear global
 
 %Initialize solid
 global Parts Nodes Elements Materials ElForms Damage Lengths Speeds GDOF GDOFall u v Fext Fmax M dim a t;
-global filename;
+global filename DoDamage;
+DoDamage = Model.Init.DoDamage;
 filename = Model.Init.filename;
 
 tsScale = 0.9;
 Solver = explicitSolverTF();
 InitSolid();
 
-lvlDef = Solid2Gas(Nodes,Elements,v);
+lvlDef = Solid2Gas(Nodes,Elements,v,Model);
 %keyboard
 Model.Init.lvlDef = lvlDef; 
 Model.lvlSet.present = true;
@@ -51,7 +52,7 @@ while (Grid.t<Tfin)
     
 
     %Bring in new solid positions/velocities
-    lvlDef = Solid2Gas(Nodes,Elements,v);
+    lvlDef = Solid2Gas(Nodes,Elements,v,Model);
     Model.Init.lvlDef = lvlDef; 
     
     %keyboard
@@ -169,7 +170,7 @@ Grid.t = 0;
 Grid.Ts = 0;
 Grid.C0 = 0.45;
 
-Grid.tsDiag = 1;
+Grid.tsDiag = Model.tsDiag;
 fprintf('Building grid ...\n');
 fprintf('\t(Dx,Dy) = (%f,%f)\n', dx,dy);
 fprintf('\tAspect Ratio = %f\n', dx/dy);
@@ -230,6 +231,10 @@ end
 if (Model.Pic.dovid) & ~isfield(Model.Pic,'vid_dir')
         Model.Pic.vid_dir = 'Vids/scratch';
 end
+
+if ~isfield(Model,'tsDiag')
+    Model.tsDiag = 10;
+end
 % 
 % 
 % if isfield(Model.Init,'lvlDef')
@@ -281,11 +286,13 @@ global Pmin;
 global Dmin;
 global Nfig;
 
+
 SMALL_NUM = 1.0e-8;
 DEBUG = true;
 Pmin = 1.0e-8;
 Dmin = 1.0e-8;
 Nfig = 0;
+
 
 function obsDat = fixPoly(obsDat)
 

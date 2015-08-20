@@ -1,9 +1,10 @@
 %Test of blast (gas) + beam (solid) coupling
 
 clear; close all;
-Model.recon = 'plm'; Model.solver = 'hll';
+Model.recon = 'ppm'; Model.solver = 'hll';
+Init.DoDamage = false;
 
-Low = true;
+Low = false;
 %Generic output
 Pic.view = true;
 Pic.val = 'd';
@@ -12,10 +13,10 @@ Pic.dovid = false;
 Pic.cax = [0.0 5.0e-6];
 
 %generic initialization
-Init.rho0 = 1e-6;
+Init.rho0 = 1.0e-6;
 Init.P0 = 1e-6;
 Init.DelP = 1000;
-Model.Tfin = 20;
+Model.Tfin = 30;
 if (Low)
     Model.Bds = [-40 101 -10 175];
     Model.Nvec = round( [768 1024]/8);
@@ -23,8 +24,10 @@ if (Low)
     Init.rad = 10;
     Init.cent = [50 60];
 else
-   Model.Bds = [50 300 -50 200];
-    Model.Nvec = round( [512 1024]/16);
+   Model.Bds = [50 275 -25 200];
+   Model.Nvec = round( [1024 1024]/1);
+   Init.rad = 20;
+   Init.cent = [220 50];
    Init.filename = 'beam.k';
 end
 Init.problem = 'blast';

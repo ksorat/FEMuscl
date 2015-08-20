@@ -165,6 +165,7 @@ x1d = xx(Inbd1d); y1d = yy(Inbd1d);
 
 sdM = 2*max(sd1d);
 sd(InBd) = sd1d;
+%sum(~InBd(:))
 sd(~InBd) = sdM;
 
 

@@ -137,17 +137,20 @@ hold off
 %     hold off;
 % end
 
-caxis(cAx);
+
 xlabel('X'); ylabel('Y');
 titS = sprintf('%s @ t=%3.3f', varS, Grid.t);
 title(titS);
 
 axis equal
+colorbar();
+caxis(cAx);
 drawnow;
 if (Model.Pic.dovid)
     Figfile = sprintf('%s/Vid.%04d.png', Model.Pic.vid_dir,Nfig);
     export_fig(Figfile);
 end
+
 Nfig = Nfig+1;
 
 function FillPolys(x,y,sd)

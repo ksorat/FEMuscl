@@ -298,7 +298,9 @@ classdef node
 
                     splitFlag = true; % mark the flag as true
                     Nodes{i} = Nodes{i}.split(); % tell the node to split
-                    
+                    %fprintf('\tNode %d split! (Better go catch it)\n', i);
+                    global RedoS2G;
+                    RedoS2G = true; %Signal a recalculation of surface geometry
                 end
                 
             end

@@ -26,7 +26,7 @@ classdef explicitSolverTF
             % stuff.
   
             global u v a t GDOF Fext Fmax Elements M Damage;
-            
+            global DoDamage;
             t = 0; % start time (FLOAT)
             F = zeros(GDOF,1); % total force (GDOF x 1 VECTOR of FLOATS)
             for i = 1:length(Elements)
@@ -56,7 +56,8 @@ classdef explicitSolverTF
                 a = F./M; % calculate accelerations
                 t = t + tsScale*obj.tstep; % update time
                 
-                if ~isempty(Damage)                
+                if ( ~isempty(Damage) & DoDamage)    
+                    
                     node.damageCheck(); % check for damage
                 end
                 
