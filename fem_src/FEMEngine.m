@@ -47,6 +47,7 @@ else
     ElForms{1} = Q4; % Creating the standard Q4 element
     Damage{1} = maxPrincipalDamage(.0008);
     Materials{1} = LinearElasticTL_planeStress(1,1.1e-6,.05,.45); % create material model (ID,density,modulus,poisson)
+    
     Parts{1} = Part(Materials{1},ElForms{1}); % create part object
     Parts{1}.damage = 1;
     for i = 1:length(Speeds)

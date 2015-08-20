@@ -26,5 +26,10 @@ for n=1:Np %Loop over points (should vectorize)
     L1 = sqrt( (xp-x1)^2 + (yp-y1)^2 );
     m = (Q2-Q1)/L; 
     
-    Qi(n) = Q1 + m*L1;
+    if (L < eps)
+        Qi(n) = 0.5*(Q1+Q2);
+    else
+        Qi(n) = Q1 + m*L1;
+    end
+
 end

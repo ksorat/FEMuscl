@@ -52,7 +52,6 @@ for n=1:lvlSet.ng
     Vxgc = Vxip - scl*( Vxip - Vxbi );
     Vygc = Vyip - scl*( Vyip - Vybi );
 
-        
     if (Img.g2g)
         Dip = Gas.D(ig,jg);
         Pip = Gas.P(ig,jg);

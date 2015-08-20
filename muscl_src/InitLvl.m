@@ -60,8 +60,8 @@ for n=1:numObs
     xv = obsDat.xv;
     yv = obsDat.yv;
     aLvl = lvlPoly(obsDat,Grid);
-    
-    
+  
+   
 
     
     %aLvl has been created
@@ -108,6 +108,10 @@ if (DEBUG & ( (Grid.t+Grid.dt) <eps) & (numObs == 1) ) %Only do once
     drawnow; pause
 end
 
+%   if ( length(xv) > 55 )
+%        keyboard
+%   end
+    
 function aLvl = lvlPoly(obsDat,Grid)
 
 Nx = Grid.Nx; Ny = Grid.Ny;
