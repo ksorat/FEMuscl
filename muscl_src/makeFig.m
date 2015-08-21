@@ -96,6 +96,7 @@ end
 %Draw solid info
 hold on
 for i=1:length(Elements)
+    if isempty(Elements{i}) continue; end
     xel = Elements{i}.xyz(:,1);
     yel = Elements{i}.xyz(:,2);
     fill(xel,yel,'w');

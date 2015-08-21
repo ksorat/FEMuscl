@@ -191,7 +191,7 @@ classdef node
             end
             
             if sum(splitOrStay) == length(splitOrStay) % if every element wants to split, also bail out
-                return
+                %return
             end
 
             splitOrStay = logical(splitOrStay); % convert the vector into a boolean array (gotta do it this way in MATLAB)
@@ -268,7 +268,13 @@ classdef node
             
             for i = 1:length(Nodes)
                 
+                if ( length(Nodes{i}.owners) == 0)
+                    continue;
+                end
                 Nodes{i}.owners = Nodes{i}.owners(Nodes{i}.owners>0); % reduce the vector down to the size of the # of owners
+                if ( length(Nodes{i}.owners) == 0)
+                    continue;
+                end
 
                 if length(Nodes{i}.owners) == 1 % if this node only belongs to one element, just skip it                    
                     continue                    
@@ -312,7 +318,8 @@ classdef node
                     
                     M = zeros(GDOF); % reinitialize global mass matrix to new size due to increase in DOFs
 
-                    for i = 1:length(Elements)                    
+                    for i = 1:length(Elements)  
+                        if isempty(Elements{i}) continue; end
                         Elements{i} = Elements{i}.massMatrix(Parts{Elements{i}.part}.elForm); % run mass matrix routine on all elements
                     end % rebuild the global mass matrix
                     M = diag(M); % turn M matrix into a M vector (a GDOF x 1 VECTOR of FLOATS)

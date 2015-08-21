@@ -6,7 +6,7 @@ Model.recon = 'ppm'; Model.solver = 'hll';
 Model.tsDiag = 10;
 Init.DoDamage = true;
 
-Low = true;
+Low = false;
 %Generic output
 Pic.view = true;
 Pic.val = 'd';
@@ -21,13 +21,13 @@ Init.DelP = 1;
 Model.Tfin = 100;
 if (Low)
     Model.Bds = [-39 59 -10 175];
-    Model.Bds = [-30 59 -10 175];
+    Model.Bds = [-3 59 -10 175];
     Model.Nvec = round( [512 1024]/16);
     Init.filename = 'beam_low_res.k';
 else
-   Model.Bds = [50 300 -50 200];
+   %Model.Bds = [50 300 -50 200];
    Model.Bds = [130 200 -50 200];
-    Model.Nvec = round( [512 1024]/16);
+    Model.Nvec = round( [1024 1024]/16);
    Init.filename = 'beam.k';
 end
 Init.problem = 'flow';

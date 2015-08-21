@@ -1,4 +1,6 @@
 function [dispbcline,elementline,nodeline,dispbcend,elementend,nodeend] = LineFind(filename)
+
+dispbcline = 0;
 fid = fopen(filename);
 endlines = zeros(1,3);
 endflags = zeros(1,3);

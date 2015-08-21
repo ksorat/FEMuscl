@@ -6,78 +6,153 @@
 %NOTE, having <=3 owners DOES NOT guarantee boundary node with splitting
 %present
 
-function lvlDef = Solid2Gas(Nodes,Elements,v,Model)
-
+function lvlDef = Solid2Gas(Model)
 global RedoS2G;
 
 if isempty(RedoS2G)
     RedoS2G = true;
 end
 
-if (RedoS2G) %Calculate surface geometry
+if (RedoS2G)
+    %This work only done when topology changes
+    
+    %Calculate surface geometry
     fprintf('\t(Re)Calculating solid surface geometry\n');
+    %Calculate Link Matrix, split nodes and recalculate until topology is
+    %good
+    L = LinkMatrix();
     
-    NumNod = length(Nodes);
-    NumElt = length(Elements);
-    
-    %Start by finding boundary nodes/links (CCW)
-    
-    P = spalloc(NumNod,NumNod,4*NumElt);
-    for n=1:NumElt
-        eltn = Elements{n};
-        enods = [ eltn.nodes eltn.nodes(1) ]; %Embiggen for all lines
-        for l=1:4
-            n1 = enods(l); n2 = enods(l+1);
-            if ( P(n2,n1) == 1 )
-                P(n2,n1) = 0; %Cancel link b/c double
-            else
-                P(n1,n2) = 1;
-            end
-            
-        end
-    end
-    
-    
-    %Now we have sparse matrix with links (CCW)
-    %Each closed orbit corresponds to a different distinct object
-    %Traverse orbits, pull out of P
-    numObj = 0;
-    while ( nnz(P) > 0 )
-        numObj = numObj+1;
-        [n1 n2 ~] = find(P); %Arrows (CCW) n1->n2
-        sub_id = n1(1); %Starting point of link
-        nex_id = n2(1); %Ending point of link
-      
-        while ( nex_id ~= sub_id(1) ) %Traverse until closure
-            sub_id = [sub_id nex_id];
-            I = find( n1 == nex_id ); %Switch so nex_id is starting point
-            if (length(I) > 1)
-                disp('Topology failure!  This ain''t a Mobius strip, get that nonsense out of here.');
-                pause
-            end
-            nex_id = n2(I);
-        end
-        sub_id = [sub_id sub_id(1)]; %Close circuit
-        %Pull entries from connectivity matrix
-        Nsub = length(sub_id);
-        for n=1:Nsub-1
-            n1 = sub_id(n); n2 = sub_id(n+1);
-            P(n1,n2) = 0;
-        end
-        lvlDef.obsDat{numObj}.nid = sub_id;    
-    end
-    lvlDef.numObs = numObj;
+    %Pull orbits from link matrix
+    lvlDef = findOrbits(L);
     RedoS2G = false;
     
-else %Use surface geometry from lvlDef
+else
     lvlDef = Model.Init.lvlDef; %Use old structure
-    
 end
 
+%This work always must be done
+lvlDef = reBoundary(lvlDef); %Refresh positions/velocities of boundary
 
-% %Note, all this previous works only needs to be done when the topology
-% %changes.  Remaining needs to be done always and only relies on
-% %lvlDef.obsDat{n}.nid's
+function L = LinkMatrix()
+
+global Nodes;
+goodTopology = false;
+
+while (~goodTopology)
+    %Get link matrix
+    L = calcLinkMatrix();
+    
+    %Check link matrix
+    [n1 n2 ~] = find(L);
+    [nUn Iu] = unique(n1); %Find unique values
+    Chk = length(n1) - length(nUn);
+    if (Chk == 0)
+        goodTopology = true;
+    else
+        fprintf('\t\tBad topology, recalculating.\n');
+        %Find problem node (start w/ first)
+        nBad = n1; 
+        nBad(Iu) = [];
+        nBad
+        NumNod1 = length(Nodes);
+        for nb=1:length(nBad)
+            
+            fixTopology( nBad(nb) );
+            if (nBad(nb) == 150)
+                %keyboard
+            end
+        end
+        %fixTopology( nBad(1) );
+        NumNod2 = length(Nodes);
+        if (NumNod1 == NumNod2)
+            keyboard
+        end
+        
+        if ( NumNod2 > 260 )
+            %keyboard
+        end
+        %keyboard
+    end
+end
+
+%Forces a split of node nB to hopefully fix topology
+function fixTopology (nB)
+
+global Nodes Elements M GDOF Parts;
+
+
+Nodes{nB} = Nodes{nB}.split();
+
+%Recalculate mass matrix/element connectivity
+M = zeros(GDOF); % reinitialize global mass matrix to new size due to increase in DOFs
+
+for i = 1:length(Elements)
+    if isempty(Elements{i}) continue; end
+    Elements{i} = Elements{i}.massMatrix(Parts{Elements{i}.part}.elForm); % run mass matrix routine on all elements
+end % rebuild the global mass matrix
+M = diag(M); % turn M matrix into a M vector (a GDOF x 1 VECTOR of FLOATS)
+
+
+function L = calcLinkMatrix()
+
+global Nodes Elements;
+
+NumNod = length(Nodes);
+NumElt = length(Elements);
+
+%Start by finding boundary nodes/links (CCW)
+
+L = spalloc(NumNod,NumNod,4*NumElt);
+for n=1:NumElt
+    eltn = Elements{n};
+    if isempty(Elements{n}) continue; end
+    enods = [ eltn.nodes eltn.nodes(1) ]; %Embiggen for all lines
+    for l=1:4
+        n1 = enods(l); n2 = enods(l+1);
+        if ( L(n2,n1) == 1 )
+            L(n2,n1) = 0; %Cancel link b/c double
+        else
+            L(n1,n2) = 1;
+        end
+        
+    end
+end
+
+function lvlDef = findOrbits(L)
+
+%Now we have sparse matrix with links (CCW)
+%Each closed orbit corresponds to a different distinct object
+%Traverse orbits, pull out of P
+numObj = 0;
+while ( nnz(L) > 0 )
+    numObj = numObj+1;
+    [n1 n2 ~] = find(L); %Arrows (CCW) n1->n2
+    sub_id = n1(1); %Starting point of link
+    nex_id = n2(1); %Ending point of link
+    
+    while ( nex_id ~= sub_id(1) ) %Traverse until closure
+        sub_id = [sub_id nex_id];
+        I = find( n1 == nex_id ); %Switch so nex_id is starting point
+        if (length(I) > 1)
+            disp('Topology failure!  This shouldn''t happen!');
+            keyboard
+        end
+        nex_id = n2(I);
+    end
+    sub_id = [sub_id sub_id(1)]; %Close circuit
+    %Pull entries from connectivity matrix
+    Nsub = length(sub_id);
+    for n=1:Nsub-1
+        n1 = sub_id(n); n2 = sub_id(n+1);
+        L(n1,n2) = 0;
+    end
+    lvlDef.obsDat{numObj}.nid = sub_id;
+end
+lvlDef.numObs = numObj;
+    
+function lvlDef = reBoundary(lvlDef)
+
+global Nodes v;
 
 numObj = lvlDef.numObs;
 
@@ -115,6 +190,52 @@ for no=1:numObj
     lvlDef.obsDat{no} = obs; %Return
 end
 
+
+
+% function lvlDef = Solid2Gas(Nodes,Elements,v,Model)
+% 
+% global RedoS2G;
+% 
+% if isempty(RedoS2G)
+%     RedoS2G = true;
+% end
+% 
+% if (RedoS2G) %Calculate surface geometry
+%     fprintf('\t(Re)Calculating solid surface geometry\n');
+%     
+%     NumNod = length(Nodes);
+%     NumElt = length(Elements);
+%     
+%     %Start by finding boundary nodes/links (CCW)
+%     
+%     P = spalloc(NumNod,NumNod,4*NumElt);
+%     for n=1:NumElt
+%         eltn = Elements{n};
+%         enods = [ eltn.nodes eltn.nodes(1) ]; %Embiggen for all lines
+%         for l=1:4
+%             n1 = enods(l); n2 = enods(l+1);
+%             if ( P(n2,n1) == 1 )
+%                 P(n2,n1) = 0; %Cancel link b/c double
+%             else
+%                 P(n1,n2) = 1;
+%             end
+%             
+%         end
+%     end
+%     
+%     
+% 
+%     RedoS2G = false;
+%     
+% else %Use surface geometry from lvlDef
+%     lvlDef = Model.Init.lvlDef; %Use old structure
+%     
+% end
+
+
+% %Note, all this previous works only needs to be done when the topology
+% %changes.  Remaining needs to be done always and only relies on
+% %lvlDef.obsDat{n}.nid's
 
 
 

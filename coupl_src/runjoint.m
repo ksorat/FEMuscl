@@ -13,7 +13,7 @@ tsScale = 0.9;
 Solver = explicitSolverTF();
 InitSolid();
 
-lvlDef = Solid2Gas(Nodes,Elements,v,Model);
+lvlDef = Solid2Gas(Model);
 %keyboard
 Model.Init.lvlDef = lvlDef; 
 Model.lvlSet.present = true;
@@ -52,7 +52,7 @@ while (Grid.t<Tfin)
     
 
     %Bring in new solid positions/velocities
-    lvlDef = Solid2Gas(Nodes,Elements,v,Model);
+    lvlDef = Solid2Gas(Model);
     Model.Init.lvlDef = lvlDef; 
     
     %keyboard

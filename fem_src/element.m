@@ -228,7 +228,17 @@ classdef element
             L = obj.ve*B';
             
         end % calculate B Matrix and Velocity Gradient        
-        
+        function Die = isBroke(obj)
+            global Parts
+            Die = false;
+            for i=1:length(obj.nodes)
+                J = obj.B.Jacobian(obj.xyz,Parts{obj.part}.elForm,i);
+                if J < 0
+                    Die = true;
+                end
+            end
+        end
+            
         function [obj,Fe] = getforce(obj)
 
             global Parts u v Fext GDOF dim Nodes;
@@ -340,7 +350,7 @@ classdef element
             numberSlots = (3*dim-3);
             
             for i = 1:length(Elements)
-                
+                if isempty(Elements{i}) continue; end
                 [me,pe] = Elements{i}.localNodeStress(); % extract local element load and weighting vectors
                 currentNodes = Elements{i}.nodes;
                 
